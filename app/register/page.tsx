@@ -49,10 +49,8 @@ export default function Register() {
         throw new Error(data.error || "Registration failed");
       }
 
-      // Wait for login to complete before redirecting
-      await login(data.user);
+      login(data.user);
 
-      // Add a small delay to ensure token is set
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       router.push("/matches");

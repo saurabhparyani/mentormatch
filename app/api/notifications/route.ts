@@ -38,7 +38,6 @@ export async function GET(request: Request) {
       },
     });
 
-    // Mark CONNECTION_ACCEPTED notifications as read immediately
     const acceptedNotifications = notifications.filter(n => n.type === "CONNECTION_ACCEPTED");
     if (acceptedNotifications.length > 0) {
       await prisma.notification.updateMany({
@@ -53,7 +52,7 @@ export async function GET(request: Request) {
       });
     }
 
-    return NextResponse.json({ notifications: [] });  // When error occurs or no notifications found
+    return NextResponse.json({ notifications: [] });  
   } catch (error) {
     console.error("Failed to fetch notifications:", error);
     return NextResponse.json(

@@ -31,7 +31,6 @@ export async function POST(request: Request) {
       },
     });
 
-    // Create notification for the recipient with sender's name
     await prisma.notification.create({
       data: {
         userId: toUserId,

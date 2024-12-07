@@ -46,7 +46,7 @@ export async function GET(request: Request) {
       }
     });
 
-    // Transform the data to always show the other user's information
+
     const transformedConnections = connections.map(conn => ({
       id: conn.id,
       user: conn.fromUserId === payload!.userId ? conn.toUser : conn.fromUser,

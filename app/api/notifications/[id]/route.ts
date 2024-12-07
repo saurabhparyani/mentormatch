@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import prisma from "@/prisma/db";
 import { verifyToken } from "@/lib/auth";
+import { type NextRequest } from "next/server";
+
+interface RouteParams {
+  id: string;
+}
 
 export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: Promise<RouteParams> }
 ) {
   try {
     const cookieHeader = request.headers.get("cookie");
@@ -18,10 +23,11 @@ export async function PATCH(
 
     const payload = verifyToken(token);
     const body = await request.json();
+    const { id } = await context.params;
 
     const notification = await prisma.notification.update({
       where: {
-        id: params.id,
+        id: id,
         userId: payload!.userId,
       },
       data: {
@@ -37,4 +43,5 @@ export async function PATCH(
       { status: 500 }
     );
   }
-} 
+}
+

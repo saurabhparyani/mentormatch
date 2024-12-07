@@ -1,13 +1,20 @@
 import { NextResponse } from "next/server";
 import prisma from "@/prisma/db";
+import { type NextRequest } from "next/server";
+
+interface RouteParams {
+  userId: string;
+}
 
 export async function GET(
-  request: Request,
-  { params }: { params: { userId: string } }
+  request: NextRequest,
+  context: { params: Promise<RouteParams> }
 ) {
   try {
+    const { userId } = await context.params;
+
     const user = await prisma.user.findUnique({
-      where: { id: params.userId },
+      where: { id: userId },
       select: {
         id: true,
         name: true,
@@ -30,4 +37,5 @@ export async function GET(
       { status: 500 }
     );
   }
-} 
+}
+

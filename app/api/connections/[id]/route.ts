@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import prisma from "@/prisma/db";
 import { verifyToken } from "@/lib/auth";
+import { type NextRequest } from "next/server";
+
+interface RouteParams {
+  id: string;
+}
 
 export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: Promise<RouteParams> }
 ) {
   try {
     const cookieHeader = request.headers.get("cookie");
@@ -22,9 +27,8 @@ export async function PATCH(
     }
 
     const { status } = await request.json();
-    const connectionId = await Promise.resolve(params.id);
+    const { id: connectionId } = await context.params;
 
-    // First fetch the connection to get both users' information
     const existingConnection = await prisma.connection.findUnique({
       where: { id: connectionId },
       include: {
@@ -37,7 +41,6 @@ export async function PATCH(
       return NextResponse.json({ error: "Connection not found" }, { status: 404 });
     }
 
-    // Update the connection status
     const connection = await prisma.connection.update({
       where: {
         id: connectionId,
@@ -66,8 +69,8 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: Promise<RouteParams> }
 ) {
   try {
     const cookieHeader = request.headers.get("cookie");
@@ -84,14 +87,29 @@ export async function DELETE(
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    await prisma.connection.delete({
+    const { id: connectionId } = await context.params;
+
+    const connection = await prisma.connection.findFirst({
       where: {
-        id: params.id,
+        id: connectionId,
         OR: [
           { fromUserId: payload.userId },
           { toUserId: payload.userId }
         ]
-      },
+      }
+    });
+
+    if (!connection) {
+      return NextResponse.json(
+        { error: "Connection not found" },
+        { status: 404 }
+      );
+    }
+
+    await prisma.connection.delete({
+      where: {
+        id: connectionId
+      }
     });
 
     return NextResponse.json({ success: true });
@@ -102,4 +120,5 @@ export async function DELETE(
       { status: 500 }
     );
   }
-} 
+}
+

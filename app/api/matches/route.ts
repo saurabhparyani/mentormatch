@@ -18,7 +18,6 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Get all connections for the user (both sent and received) that are ACCEPTED
     const connections = await prisma.connection.findMany({
       where: {
         OR: [
@@ -32,14 +31,11 @@ export async function GET(req: Request) {
       },
     });
 
-    // Create a set of connected user IDs
     const connectedUserIds = new Set(
       connections.flatMap(conn => [conn.fromUserId, conn.toUserId])
     );
-    // Remove the current user's ID from the set
     connectedUserIds.delete(userId);
 
-    // Find potential matches based on role and interests, excluding connected users
     const potentialMatches = await prisma.user.findMany({
       where: {
         role: user.role === "MENTOR" ? "MENTEE" : "MENTOR",
@@ -51,7 +47,6 @@ export async function GET(req: Request) {
       },
     });
 
-    // Calculate match scores
     const matches = potentialMatches.map((match) => {
       const commonSkills = match.skills.filter((skill) =>
         user.interests.includes(skill)
@@ -72,7 +67,6 @@ export async function GET(req: Request) {
       };
     });
 
-    // Sort by match score
     matches.sort((a, b) => b.matchScore - a.matchScore);
 
     return NextResponse.json({ matches });
